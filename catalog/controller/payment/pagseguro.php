@@ -271,7 +271,7 @@ class ControllerPaymentPagSeguro extends Controller
 			if ($_shipping_cost['0'] != 'free') {
 				$_array_setting = $this->model_setting_setting->getSetting($_shipping_cost['0']);
 
-				$_value = $_array_setting[$_shipping_cost['0'] . "_cost"];
+				$_value = (isset($_array_setting[$_shipping_cost['0'] . "_cost"]) ? $_array_setting[$_shipping_cost['0'] . "_cost"] : null);
 			}
 		}
 
