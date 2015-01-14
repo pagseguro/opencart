@@ -147,7 +147,7 @@ class ControllerPaymentPagSeguro extends Controller
 
 			$_extra = $_order_total - $_sub_total;
 		}
-		return $this->currency->format($_extra, $this->_order_info['currency_code'], false, false);
+		return $this->_preparePrice($_extra, false);
 	}
 
 	/**
@@ -193,7 +193,7 @@ class ControllerPaymentPagSeguro extends Controller
 			$pagSeguroItem->setId($cont++);
 			$pagSeguroItem->setDescription($product['name']);
 			$pagSeguroItem->setQuantity($product['quantity']);
-			$pagSeguroItem->setAmount(str_replace("R$", "", $this->currency->format($product['price'], $this->_order_info['currency_code'], false, false)));
+            $pagSeguroItem->setAmount($this->_preparePrice($product['price']));
 			$pagSeguroItem->setWeight($product['weight'] * 1000);
 
 			array_push($pagSeguroItens, $pagSeguroItem);
@@ -224,7 +224,7 @@ class ControllerPaymentPagSeguro extends Controller
 		$shipping = new PagSeguroShipping();
 		$shipping->setAddress($this->_generatePagSeguroShippingAddressDataObject());
 		$shipping->setType($this->_generatePagSeguroShippingTypeObject());
-		$shipping->setCost(str_replace("R$", '', $this->currency->format($this->_generatePagSeguroShippingCost(), $this->_order_info['currency_code'], false, false)));
+        $shipping->setCost($this->_preparePrice($this->_generatePagSeguroShippingCost()));
 		return $shipping;
 	}
 
@@ -353,5 +353,16 @@ class ControllerPaymentPagSeguro extends Controller
 		$_dir = str_replace('catalog/', '', DIR_APPLICATION);
 		return ($this->_isNotNull($this->config->get('pagseguro_directory')) == TRUE) ? $_dir . $this->config->get('pagseguro_directory') : null;
 	}
+
+    /**
+     * Prepare price and convert if currency code is diferent than BRL
+     */
+    private function _preparePrice($price, $remove_prefix = true ){
+        if( $this->_order_info['currency_code'] !== PagSeguroCurrencies::getIsoCodeByName("REAL") ){
+            $price = $this->currency->convert($price, $this->_order_info['currency_code'], PagSeguroCurrencies::getIsoCodeByName("REAL"));
+        }
+        $final_price = $this->currency->format($price, PagSeguroCurrencies::getIsoCodeByName("REAL"), false, false);
+        return ( $remove_prefix )? str_replace("R$", "", $final_price) : $final_price;
+    }
 }
 ?>
